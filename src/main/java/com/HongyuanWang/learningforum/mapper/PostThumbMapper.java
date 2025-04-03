@@ -4,11 +4,11 @@ import com.HongyuanWang.learningforum.model.entity.PostThumb;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
- * 帖子点赞数据库操作
- *
- * @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
- * @from <a href="https://HongyuanWang.icu">编程导航知识星球</a>
- */
+* @author hongyuanwang
+* @description 针对表【post_thumb(post thumbs)】的数据库操作Mapper
+* @createDate 2025-04-02 15:03:53
+* @Entity com.HongyuanWang.learningforum.model.entity.PostThumb
+*/
 public interface PostThumbMapper extends BaseMapper<PostThumb> {
 
 }

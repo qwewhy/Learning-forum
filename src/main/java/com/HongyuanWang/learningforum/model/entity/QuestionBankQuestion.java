@@ -1,52 +1,38 @@
 package com.HongyuanWang.learningforum.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
 import lombok.Data;
 
 /**
- * posts
- * @TableName post
+ * question bank questions
+ * @TableName question_bank_question
  */
-@TableName(value ="post")
+@TableName(value ="question_bank_question")
 @Data
-public class Post {
+public class QuestionBankQuestion {
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
-     * title
+     * question bank id
      */
-    private String title;
+    private Long questionBankId;
 
     /**
-     * content
+     * question id
      */
-    private String content;
+    private Long questionId;
 
     /**
-     * tags(json arrays
-     */
-    private String tags;
-
-    /**
-     * thumb count
-     */
-    private Integer thumbNum;
-
-    /**
-     * favour count
-     */
-    private Integer favourNum;
-
-    /**
-     * create user id
+     * creator user id
      */
     private Long userId;
 
@@ -61,7 +47,10 @@ public class Post {
     private Date updateTime;
 
     /**
-     * is delete (0: no, 1: yes)
+     * question order (question number)
      */
-    private Integer isDelete;
+    private Integer questionOrder;
+
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
 }

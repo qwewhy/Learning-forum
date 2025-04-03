@@ -1,23 +1,18 @@
 package com.HongyuanWang.learningforum.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
 
 /**
- * 帖子收藏
- *
- * @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
- * @from <a href="https://HongyuanWang.icu">编程导航知识星球</a>
- **/
-@TableName(value = "post_favour")
+ * post favourites
+ * @TableName post_favour
+ */
+@TableName(value ="post_favour")
 @Data
-public class PostFavour implements Serializable {
-
+public class PostFavour {
     /**
      * id
      */
@@ -25,25 +20,22 @@ public class PostFavour implements Serializable {
     private Long id;
 
     /**
-     * 帖子 id
+     * post id
      */
     private Long postId;
 
     /**
-     * 创建用户 id
+     * create user id
      */
     private Long userId;
 
     /**
-     * 创建时间
+     * create time
      */
     private Date createTime;
 
     /**
-     * 更新时间
+     * update time
      */
     private Date updateTime;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
 }

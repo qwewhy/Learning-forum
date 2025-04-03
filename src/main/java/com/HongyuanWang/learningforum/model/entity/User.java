@@ -1,85 +1,101 @@
 package com.HongyuanWang.learningforum.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.TableField;
 import java.util.Date;
 import lombok.Data;
 
 /**
- * 用户
- *
- * @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
- * @from <a href="https://HongyuanWang.icu">编程导航知识星球</a>
+ * users
+ * @TableName user
  */
-@TableName(value = "user")
+@TableName(value ="user")
 @Data
-public class User implements Serializable {
-
+public class User {
     /**
      * id
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
-     * 用户账号
+     * account
      */
     private String userAccount;
 
     /**
-     * 用户密码
+     * key
      */
     private String userPassword;
 
     /**
-     * 开放平台id
+     * Wechat public platform id
      */
     private String unionId;
 
     /**
-     * 公众号openId
+     * Wechat public account openId
      */
     private String mpOpenId;
 
     /**
-     * 用户昵称
+     * user name
      */
     private String userName;
 
     /**
-     * 用户头像
+     * user avatar
      */
     private String userAvatar;
 
     /**
-     * 用户简介
+     * user profile
      */
     private String userProfile;
 
     /**
-     * 用户角色：user/admin/ban
+     * user role：user/admin/ban
      */
     private String userRole;
 
     /**
-     * 创建时间
+     * edit time
+     */
+    private Date editTime;
+
+    /**
+     * create time
      */
     private Date createTime;
 
     /**
-     * 更新时间
+     * update time
      */
     private Date updateTime;
 
     /**
-     * 是否删除
+     * is delete (0: no, 1: yes)
      */
     @TableLogic
     private Integer isDelete;
+
+    /**
+     * vip expiration time
+     */
+    private Date vipExpireTime;
+
+    /**
+     * vip code
+     */
+    private String vipCode;
+
+    /**
+     * vip number
+     */
+    private Long vipNumber;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
