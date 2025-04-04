@@ -1,7 +1,6 @@
 package com.HongyuanWang.learningforum.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.HongyuanWang.learningforum.exception.BusinessException;
 import com.HongyuanWang.learningforum.model.entity.Question;
 import com.HongyuanWang.learningforum.model.entity.QuestionBank;
 import com.HongyuanWang.learningforum.service.QuestionBankService;
@@ -15,15 +14,13 @@ import com.HongyuanWang.learningforum.exception.ThrowUtils;
 import com.HongyuanWang.learningforum.mapper.QuestionBankQuestionMapper;
 import com.HongyuanWang.learningforum.model.dto.questionBankQuestion.QuestionBankQuestionQueryRequest;
 import com.HongyuanWang.learningforum.model.entity.QuestionBankQuestion;
-import com.HongyuanWang.learningforum.model.entity.User;
 import com.HongyuanWang.learningforum.model.vo.QuestionBankQuestionVO;
-import com.HongyuanWang.learningforum.model.vo.UserVO;
 import com.HongyuanWang.learningforum.service.QuestionBankQuestionService;
 import com.HongyuanWang.learningforum.service.UserService;
 import com.HongyuanWang.learningforum.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -51,6 +48,7 @@ public class QuestionBankQuestionServiceImpl extends ServiceImpl<QuestionBankQue
     private QuestionBankService questionBankService;
 
     @Resource
+    @Lazy
     private QuestionService questionService;
 
     /**
