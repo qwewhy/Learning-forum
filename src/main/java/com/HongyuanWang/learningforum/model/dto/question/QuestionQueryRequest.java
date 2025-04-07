@@ -11,7 +11,7 @@ import java.util.List;
  * 查询question请求
  *
  * @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

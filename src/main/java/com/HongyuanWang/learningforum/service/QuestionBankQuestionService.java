@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
  * question_bank_question服务
  *
  * @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+
  */
 public interface QuestionBankQuestionService extends IService<QuestionBankQuestion> {
 

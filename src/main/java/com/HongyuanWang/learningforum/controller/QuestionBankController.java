@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletRequest;
  * question_bank接口
  *
  * @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+
  */
 @RestController
 @RequestMapping("/questionBank")

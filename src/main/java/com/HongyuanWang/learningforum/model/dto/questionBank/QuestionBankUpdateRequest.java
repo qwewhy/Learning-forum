@@ -9,7 +9,7 @@ import java.util.List;
  * 更新question_bank请求
  *
  * @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+
  */
 @Data
 public class QuestionBankUpdateRequest implements Serializable {
