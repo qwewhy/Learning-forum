@@ -2,6 +2,9 @@ package com.HongyuanWang.learningforum.mapper;
 
 import com.HongyuanWang.learningforum.model.entity.Question;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Select;
+import java.util.Date;
+import java.util.List;
 
 /**
 * @author hongyuanwang
@@ -10,7 +13,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.HongyuanWang.learningforum.model.entity.Question
 */
 public interface QuestionMapper extends BaseMapper<Question> {
-
+    @Select("select * from question where updateTime >= #{minUpdateTime}")
+    List<Question> listQuestionWithDelete(Date minUpdateTime);
 }
 
 

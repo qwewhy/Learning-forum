@@ -1,7 +1,13 @@
 # 公共配置文件
 # @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
 # @from <a href="https://HongyuanWang.icu">学习刷题论坛</a>
+app:
+  timezone: UTC
+
 spring:
+  jackson:
+    time-zone: Australia/Sydney
+
   application:
     name: LearningForum-Nextjs-Backend
   # 默认 dev 环境
@@ -21,9 +27,10 @@ spring:
   # todo 需替换配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/learning_forum
+    url: jdbc:mysql://localhost:3306/learning_forum?serverTimezone=${app.timezone}
     username: root
     password: 123456
+
   # Redis 配置
   redis:
     database: 1
@@ -33,10 +40,10 @@ spring:
     #password: 123456
   # Elasticsearch 配置
   # todo 需替换配置，然后取消注释
-#  elasticsearch:
-#    uris: http://localhost:9200
-#    username: root
-#    password: 123456
+  elasticsearch:
+    uris: http://localhost:9200
+    username: root
+    password: 123456
   # 文件上传
   servlet:
     multipart:
