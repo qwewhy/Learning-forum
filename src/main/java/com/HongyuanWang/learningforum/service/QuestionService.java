@@ -9,6 +9,7 @@ import com.HongyuanWang.learningforum.model.entity.Question;
 import com.HongyuanWang.learningforum.model.vo.QuestionVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * question服务
@@ -67,4 +68,10 @@ public interface QuestionService extends IService<Question> {
      * @return
      */
     Page<Question> searchFromEs(QuestionQueryRequest questionQueryRequest);
+
+    /**
+     *
+     * @param questionIdList
+     */
+    void batchDeleteQuestions(List<Long> questionIdList);
 }

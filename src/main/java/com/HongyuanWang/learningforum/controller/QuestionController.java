@@ -1,10 +1,7 @@
 package com.HongyuanWang.learningforum.controller;
 
 import cn.hutool.json.JSONUtil;
-import com.HongyuanWang.learningforum.model.entity.QuestionBankQuestion;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.HongyuanWang.learningforum.model.dto.question.*;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.HongyuanWang.learningforum.annotation.AuthCheck;
 import com.HongyuanWang.learningforum.common.BaseResponse;
@@ -14,10 +11,6 @@ import com.HongyuanWang.learningforum.common.ResultUtils;
 import com.HongyuanWang.learningforum.constant.UserConstant;
 import com.HongyuanWang.learningforum.exception.BusinessException;
 import com.HongyuanWang.learningforum.exception.ThrowUtils;
-import com.HongyuanWang.learningforum.model.dto.question.QuestionAddRequest;
-import com.HongyuanWang.learningforum.model.dto.question.QuestionEditRequest;
-import com.HongyuanWang.learningforum.model.dto.question.QuestionQueryRequest;
-import com.HongyuanWang.learningforum.model.dto.question.QuestionUpdateRequest;
 import com.HongyuanWang.learningforum.service.QuestionBankQuestionService;
 import com.HongyuanWang.learningforum.model.entity.Question;
 import com.HongyuanWang.learningforum.model.entity.User;
@@ -31,8 +24,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.stream.Collectors;
-import cn.hutool.core.collection.CollUtil;
 
 /**
  * question接口
@@ -153,7 +144,6 @@ public class QuestionController {
      * @return
      */
     @GetMapping("/get/vo")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<QuestionVO> getQuestionVOById(long id, HttpServletRequest request) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
         // 查询数据库
@@ -260,5 +250,22 @@ public class QuestionController {
         return ResultUtils.success(true);
     }
 
+    @PostMapping("/search/page/vo")
+    public BaseResponse<Page<QuestionVO>> searchQuestionVOByPage(@RequestBody QuestionQueryRequest questionQueryRequest,
+                                                                 HttpServletRequest request) {
+        long size = questionQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 200, ErrorCode.PARAMS_ERROR);
+        Page<Question> questionPage = questionService.searchFromEs(questionQueryRequest);
+        return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
+    }
+
+    @PostMapping("/delete/batch")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> batchDeleteQuestion(@RequestBody QuestionBatchDeleteRequest questionBatchDeleteRequest) {
+        ThrowUtils.throwIf(questionBatchDeleteRequest == null, ErrorCode.PARAMS_ERROR);
+        questionService.batchDeleteQuestions(questionBatchDeleteRequest.getQuestionIdList());
+        return ResultUtils.success(true);
+    }
     // endregion
 }

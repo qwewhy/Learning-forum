@@ -1,13 +1,16 @@
 package com.HongyuanWang.learningforum.service;
 
+import com.HongyuanWang.learningforum.model.entity.User;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.HongyuanWang.learningforum.model.dto.questionBankQuestion.QuestionBankQuestionQueryRequest;
 import com.HongyuanWang.learningforum.model.entity.QuestionBankQuestion;
 import com.HongyuanWang.learningforum.model.vo.QuestionBankQuestionVO;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * question_bank_question服务
@@ -50,4 +53,23 @@ public interface QuestionBankQuestionService extends IService<QuestionBankQuesti
      * @return
      */
     Page<QuestionBankQuestionVO> getQuestionBankQuestionVOPage(Page<QuestionBankQuestion> questionBankQuestionPage, HttpServletRequest request);
+
+    /**
+     * 批量添加题目到题库
+     *
+     * @param questionIdList
+     * @param questionBankId
+     * @param loginUser
+     * @return
+     */
+    void batchAddQuestionBankToBank(List<Long> questionIdList, Long questionBankId, User loginUser);
+
+    /**
+     * 批量添加题目到题库 仅内部调用的事务接口
+     * @param questionBankQuestions
+     */
+    @Transactional(rollbackFor = Exception.class)
+    void batchAddQuestionsToBankInner(List<QuestionBankQuestion> questionBankQuestions);
+
+    void batchRemoveQuestionBankFromBank(List<Long> questionIdList, Long questionBankId, User loginUser);
 }
