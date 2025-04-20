@@ -1,6 +1,7 @@
 package com.HongyuanWang.learningforum.model.dto.question;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.HongyuanWang.learningforum.model.entity.Post;
 import com.HongyuanWang.learningforum.model.entity.Question;
@@ -27,7 +28,7 @@ import java.util.List;
 @Data
 public class QuestionEsDTO implements Serializable {
 
-    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     /**
      * id
@@ -91,20 +92,9 @@ public class QuestionEsDTO implements Serializable {
         }
         QuestionEsDTO questionEsDTO = new QuestionEsDTO();
         BeanUtils.copyProperties(question, questionEsDTO);
-
-        // 转换日期格式
-        if (question.getCreateTime() != null) {
-            // 可以在这里格式化日期，或者直接使用原始Date对象
-            questionEsDTO.setCreateTime(question.getCreateTime());
-        }
-        if (question.getUpdateTime() != null) {
-            questionEsDTO.setUpdateTime(question.getUpdateTime());
-        }
-
-        // 处理标签
         String tagsStr = question.getTags();
-        if (StringUtils.isNotBlank(tagsStr)) {
-            questionEsDTO.setTags(JSONUtil.toList(tagsStr, String.class));
+        if (StrUtil.isNotBlank(tagsStr)) {
+            questionEsDTO.setTags(JSONUtil.toList(JSONUtil.parseArray(tagsStr), String.class));
         }
         return questionEsDTO;
     }

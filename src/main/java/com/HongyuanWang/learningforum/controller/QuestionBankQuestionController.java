@@ -244,7 +244,7 @@ public class QuestionBankQuestionController {
         User loginUser = userService.getLoginUser(request);
         Long questionBankId = questionBankQuestionBatchAddRequest.getQuestionBankId();
         List<Long> questionIdList = questionBankQuestionBatchAddRequest.getQuestionIdList();
-        questionBankQuestionService.batchAddQuestionBankToBank(questionIdList,questionBankId,loginUser);
+        questionBankQuestionService.batchAddQuestionsToBank(questionIdList,questionBankId,loginUser);
         return ResultUtils.success(true);
     }
 
