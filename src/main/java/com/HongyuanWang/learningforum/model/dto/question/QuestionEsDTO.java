@@ -28,7 +28,7 @@ import java.util.List;
 @Data
 public class QuestionEsDTO implements Serializable {
 
-    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
     /**
      * id
