@@ -210,8 +210,7 @@ public class QuestionBankQuestionController {
     /**
      * 移除题库题目关联
      * @return
-     */
-    @PostMapping("/remove")
+     @PostMapping("/remove")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> removeQuestionBankQuestion(
             @RequestBody QuestionBankQuestionRemoveRequest questionBankQuestionRemoveRequest
