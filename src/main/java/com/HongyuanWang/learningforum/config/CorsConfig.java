@@ -22,6 +22,7 @@ public class CorsConfig implements WebMvcConfigurer {
                 // 放行哪些域名（必须用 patterns，否则 * 会和 allowCredentials 冲突）
                 .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedOrigins("http://localhost:3000", "http://chemxnexus.com.cn")
                 .allowedHeaders("*")
                 .exposedHeaders("*");
     }

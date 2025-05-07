@@ -2,10 +2,25 @@
 # @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
 
 -- Create database
-create database if not exists learning_forum;
+# create database if not exists learning_forum;
+
+-- 切换到 mysql 管理库
+# mysql -u root -p
+
+-- 创建库（如果还没创建）
+# CREATE DATABASE IF NOT EXISTS chemxnexus CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE chemxnexus;
+
+-- 授权 chemxnexus_user 对该库的所有操作权限
+GRANT ALL PRIVILEGES
+    ON chemxnexus.*
+    TO 'chemxnexus_user'@'%'
+        IDENTIFIED BY 'Why20020721';
+FLUSH PRIVILEGES;
 
 -- Switch database
-use learning_forum;
+# use learning_forum;
 
 -- User table
 create table if not exists user

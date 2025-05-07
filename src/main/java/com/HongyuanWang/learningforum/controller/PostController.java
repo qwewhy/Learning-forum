@@ -1,5 +1,6 @@
 package com.HongyuanWang.learningforum.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.HongyuanWang.learningforum.annotation.AuthCheck;

@@ -1,5 +1,6 @@
 package com.HongyuanWang.learningforum.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.HongyuanWang.learningforum.model.vo.QuestionVO;
 import com.HongyuanWang.learningforum.model.dto.question.QuestionQueryRequest;
 import com.HongyuanWang.learningforum.model.entity.Question;
@@ -178,6 +179,8 @@ public class QuestionBankController {
 
         // 设置本地缓存（如果不是热 key，这个方法不会设置缓存）
         JdHotKeyStore.smartSet(key, questionBankVO);
+
+
 
         // 获取封装类
         return ResultUtils.success(questionBankVO);
