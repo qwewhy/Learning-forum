@@ -1,23 +1,17 @@
 # SpringBoot 学习论坛项目文档 - 作业3
 
 <div align="center">
-  <img src="https://via.placeholder.com/200x200" alt="学习论坛 Logo" width="200"/>
-  <h3>专业的SpringBoot学习交流社区</h3>
+  <img src="https://www.chemviz3d.com/chemistry-3d-logo.svg" alt="学习论坛 Logo" width="200"/>
+  <h3>专业的学习资源交流社区</h3>
   <p>基于 Java SpringBoot 的全功能论坛系统，整合了主流技术栈与企业级性能优化</p>
 </div>
 
 ## 📚 项目概述
 **项目名称**：SpringBoot LearningForum —— 已通过腾讯云部署服务器
-**备注**：由于作业中展示需求，不得不将服务器接口文档等信息明文放入此文件中，因此不保证在您评分的时候服务器仍在运行，有被攻击而无法使用的可能。
+**备注**：由于作业中展示需求，不得不将服务器接口文档等信息明文放入此文件中，因此不保证在您评分的时候服务器仍在运行，服务器有被攻击而无法使用的可能。
 **作者**：Hongyuan Wang  
 
 **项目演示**：[接口文档](http://43.165.196.25/api/doc.html#/home) 接口文档账号：root 密码：Why20020721
-
-## GIT记录与接口文档
-
-![git1](public/git1.png)
-![git2](public/git2.png)
-![API-Doc](public/API-Doc.png)
 
 ## 🚀 核心亮点
 
@@ -85,6 +79,12 @@
 - **自定义代码生成器**：一键生成Service、Controller、实体类代码
 - **Spring Boot Devtools**：热部署，提升开发效率
 - **Logback**：日志框架，支持多环境日志配置
+
+## GIT记录与接口文档
+
+![git1](public/git1.png)
+![git2](public/git2.png)
+![API-Doc](public/API-Doc.png)
 
 ## 🌟 业务功能
 
