@@ -1,143 +1,142 @@
-# SpringBoot 学习论坛项目文档 - 作业3
+# SpringBoot Learning Forum Project Documentation - Assignment 3
 
 <div align="center">
-  <img src="https://www.chemviz3d.com/chemistry-3d-logo.svg" alt="学习论坛 Logo" width="200"/>
-  <h3>专业的学习资源交流社区</h3>
-  <p>基于 Java SpringBoot 的全功能论坛系统，整合了主流技术栈与企业级性能优化</p>
+  <img src="https://www.chemviz3d.com/chemistry-3d-logo.svg" alt="Learning Forum Logo" width="200"/>
+  <h3>A Professional Community for Exchanging Learning Resources</h3>
+  <p>A full-featured forum system based on Java SpringBoot, integrating mainstream technology stacks and enterprise-level performance optimization.</p>
 </div>
 
-## 📚 项目概述
-**项目名称**：SpringBoot LearningForum —— 已通过腾讯云部署服务器
-**备注**：由于作业中展示需求，不得不将服务器接口文档等信息明文放入此文件中，因此不保证在您评分的时候服务器仍在运行，服务器有被攻击而无法使用的可能。
-**作者**：Hongyuan Wang  
+## 📚 Project Overview
+**Project Name**: SpringBoot LearningForum — Deployed on Tencent Cloud Server
+**Note**: Due to demonstration requirements in the assignment, server API documentation and other information had to be placed in this file in plain text. Therefore, it is not guaranteed that the server will still be running when you grade it, as the server may be attacked and become unusable.
+**Author**: Hongyuan Wang
 
-**项目演示**：[接口文档](http://43.165.196.25/api/doc.html#/home) 接口文档账号：root 密码：Why20020721
+**Project Demo**: [API Documentation](http://43.165.196.25/api/doc.html#/home) API Documentation Account: root Password: Why20020721
 
-## 🚀 核心亮点
+## 🚀 Core Highlights
 
-- **高性能架构**：多级缓存设计、热点数据探测、限流熔断保护
-- **企业级安全**：RBAC权限体系、防爬虫策略、动态黑名单
-- **全文检索**：基于Elasticsearch的分词搜索，支持复杂查询条件
-- **高效开发**：自定义代码生成器，遵循阿里Java编码规范
-- **全面测试**：JUnit5单元测试
-- **云原生支持**：支持容器化部署，多环境配置
+- **High-Performance Architecture**: Multi-level caching design, hot data detection, rate limiting, and circuit breaking protection.
+- **Enterprise-Grade Security**: RBAC permission system, anti-crawler strategies, dynamic blacklist.
+- **Full-Text Search**: Elasticsearch-based tokenized search, supporting complex query conditions.
+- **Efficient Development**: Custom code generator, adhering to Alibaba Java Coding Guidelines.
+- **Comprehensive Testing**: JUnit5 unit tests.
+- **Cloud-Native Support**: Supports containerized deployment and multi-environment configuration.
 
-## 🔨 技术栈与特性
+## 🔨 Technology Stack and Features
 
-### 主流框架 & 特性
-- **Spring Boot 2.7.x**：核心框架，提供自动配置和快速开发能力
-- **Spring MVC**：Web开发框架，处理HTTP请求
-- **MyBatis + MyBatis Plus**：ORM框架，简化数据访问
-  - 集成MyBatisX插件，支持一键生成CRUD代码
-  - 开启分页功能，支持高效的数据分页查询
-- **Spring AOP**：面向切面编程，用于日志记录、权限校验等横切关注点
-- **Spring Scheduler**：定时任务框架，用于数据同步、缓存更新等
-- **Spring 事务管理**：通过注解实现声明式事务，保证数据一致性
+### Mainstream Frameworks & Features
+- **Spring Boot 2.7.x**: Core framework, providing auto-configuration and rapid development capabilities.
+- **Spring MVC**: Web development framework for handling HTTP requests.
+- **MyBatis + MyBatis Plus**: ORM framework, simplifying data access.
+  - Integrated MyBatisX plugin, supporting one-click CRUD code generation.
+  - Enabled pagination feature for efficient data pagination queries.
+- **Spring AOP**: Aspect-Oriented Programming, used for logging, permission checks, and other cross-cutting concerns.
+- **Spring Scheduler**: Scheduled task framework, used for data synchronization, cache updates, etc.
+- **Spring Transaction Management**: Declarative transactions via annotations, ensuring data consistency.
 
-### 数据存储方案
-- **MySQL**：关系型数据库，存储核心业务数据
-  - 自定义索引优化，提升查询性能
-  - Druid连接池监控，实时发现慢SQL
-- **Redis**：内存数据库
-  - 分布式Session存储，支持集群部署
-  - 热点数据缓存，减轻数据库压力
-  - BitMap实现高效数据统计
-  - Lua脚本保证原子操作
-- **Elasticsearch**：搜索引擎
-  - 自定义分词器，提升搜索准确性
-  - 动静分离策略，减少数据同步成本
-  - 定时增量同步机制
-- **腾讯云 COS**：对象存储，用于文件上传和CDN加速
+### Data Storage Solutions
+- **MySQL**: Relational database for storing core business data.
+  - Custom index optimization to improve query performance.
+  - Druid connection pool monitoring for real-time detection of slow SQL.
+- **Redis**: In-memory database.
+  - Distributed Session storage, supporting cluster deployment.
+  - Hot data caching to reduce database pressure.
+  - BitMap for efficient data statistics.
+  - Lua scripts to ensure atomic operations.
+- **Elasticsearch**: Search engine.
+  - Custom tokenizer to improve search accuracy.
+  - Static/dynamic data separation strategy to reduce data synchronization costs.
+  - Scheduled incremental synchronization mechanism.
+- **Tencent Cloud COS**: Object storage for file uploads and CDN acceleration.
 
-### 工具与库
-- **Easy Excel**：高效的Excel处理库，支持大文件导入导出
-- **Hutool**：Java工具集，提供丰富的工具方法
-- **Apache Commons Lang3**：Java基础工具类库
-- **Lombok**：通过注解简化JavaBean开发
-- **Caffeine**：本地缓存库，提供JVM级别的高速缓存
-- **HotKey**：热点数据探测，自动缓存热门访问内容
-- **Redisson**：分布式锁和富集的Redis客户端
+### Tools and Libraries
+- **Easy Excel**: Efficient Excel processing library, supporting large file import/export.
+- **Hutool**: Java utility collection, providing a wealth of utility methods.
+- **Apache Commons Lang3**: Java basic utility library.
+- **Lombok**: Simplifies JavaBean development through annotations.
+- **Caffeine**: Local cache library, providing JVM-level high-speed caching.
+- **HotKey**: Hot data detection, automatically caching frequently accessed content.
+- **Redisson**: Distributed locks and enriched Redis client.
 
-### 安全与性能优化
-- **Sa-Token**：轻量级权限认证框架
-  - 实现同端互斥登录，防止账号共享
-  - 基于RBAC的权限控制
-- **Sentinel**：流量控制和熔断降级
-  - 接口限流保护
-  - 热点参数限流
-  - 服务熔断，自动降级
-- **自定义反爬策略**：
-  - 基于Redis的访问频率统计
-  - Lua脚本实现原子计数
-  - 动态黑名单机制
-- **Nacos**：服务配置中心
-  - 动态更新系统配置
-  - 实时调整黑白名单
+### Security and Performance Optimization
+- **Sa-Token**: Lightweight permission authentication framework.
+  - Implements mutually exclusive login on the same device to prevent account sharing.
+  - RBAC-based permission control.
+- **Sentinel**: Flow control and circuit breaking.
+  - API rate limiting protection.
+  - Hot parameter rate limiting.
+  - Service circuit breaking with automatic fallback.
+- **Custom Anti-Crawler Strategy**:
+  - Redis-based access frequency statistics.
+  - Lua scripts for atomic counting.
+  - Dynamic blacklist mechanism.
+- **Nacos**: Service configuration center.
+  - Dynamic updates of system configurations.
+  - Real-time adjustment of whitelists and blacklists.
 
-### 开发与调试工具
-- **Swagger + Knife4j**：API文档生成与测试
-- **自定义代码生成器**：一键生成Service、Controller、实体类代码
-- **Spring Boot Devtools**：热部署，提升开发效率
-- **Logback**：日志框架，支持多环境日志配置
+### Development and Debugging Tools
+- **Swagger + Knife4j**: API documentation generation and testing.
+- **Custom Code Generator**: One-click generation of Service, Controller, and entity class code.
+- **Spring Boot Devtools**: Hot deployment, improving development efficiency.
+- **Logback**: Logging framework, supporting multi-environment log configuration.
 
-## GIT记录与接口文档
+## GIT Records and API Documentation
 
 ![git1](public/git1.png)
 ![git2](public/git2.png)
 ![API-Doc](public/API-Doc.png)
 
-## 🌟 业务功能
+## 🌟 Business Functions
 
-### 用户系统
-- 登录、注册、注销、个人信息更新
-- 基于Sa-Token的权限管理
-- 微信开放平台登录集成
-- 同端互斥登录机制
+### User System
+- Login, registration, logout, personal information update.
+- Sa-Token based permission management.
+- WeChat Open Platform login integration.
+- Mutually exclusive login mechanism on the same device.
 
-### 论坛核心功能
-- **帖子管理**：
-  - 创建、删除、编辑、更新帖子
-  - 数据库和ES双重检索机制
-  - 标签系统，支持多维度分类
-- **互动系统**：
-  - 点赞/取消点赞功能
-  - 收藏/取消收藏功能
-  - 用户评论系统
-  - 帖子浏览统计
-- **搜索系统**：
-  - 基于ES的全文检索
-  - 支持标题、内容、标签的多条件搜索
-  - 搜索结果高亮显示
-  - 搜索推荐功能
+### Core Forum Functions
+- **Post Management**:
+  - Create, delete, edit, update posts.
+  - Dual search mechanism (database and ES).
+  - Tagging system, supporting multi-dimensional categorization.
+- **Interaction System**:
+  - Like/unlike functionality.
+  - Favorite/unfavorite functionality.
+  - User comment system.
+  - Post view statistics.
+- **Search System**:
+  - Elasticsearch-based full-text search.
+  - Supports multi-criteria search (title, content, tags).
+  - Search result highlighting.
+  - Search recommendation functionality.
 
-### 内容运营
-- 帖子数据同步机制：
-  - 全量同步ES任务
-  - 增量同步ES定时任务
-- 文件上传系统：
-  - 支持按业务分类的文件上传
-  - 支持图片、文档等多种类型
-  - 自动生成缩略图
+### Content Operations
+- Post data synchronization mechanism:
+  - Full ES synchronization task.
+  - Incremental ES synchronization scheduled task.
+- File upload system:
+  - Supports file uploads categorized by business.
+  - Supports multiple file types (images, documents, etc.).
+  - Automatic thumbnail generation.
 
-
-### 环境要求
+### Environment Requirements
 - JDK 1.8+
 - Maven 3.6+
 - MySQL 5.7+
 - Redis 6.0+
-- Elasticsearch 7.x (可选)
-- 腾讯云账号 (可选，用于对象存储)
+- Elasticsearch 7.x (Optional)
+- Tencent Cloud Account (Optional, for object storage)
 
-### 本地开发环境搭建
+### Local Development Environment Setup
 
-#### 1. 克隆项目
+#### 1. Clone Project
 ```bash
 git clone https://github.com/HongyuanWang/SpringBoot-LearningForum.git
 cd SpringBoot-LearningForum
 ```
 
-#### 2. MySQL 数据库配置
-1. 修改 `application.yml` 的数据库配置：
+#### 2. MySQL Database Configuration
+1. Modify the database configuration in `application.yml`:
 ```yaml
 spring:
   datasource:
@@ -147,12 +146,12 @@ spring:
     password: 123456
 ```
 
-2. 执行 `sql/create_table.sql` 中的数据库语句，自动创建库表
+2. Execute the database statements in `sql/create_table.sql` to automatically create the database and tables.
 
-3. 启动项目，访问 http://localhost:8101/api/doc.html 即可打开接口文档，不需要写前端就能在线调试接口
+3. Start the project and visit http://localhost:8101/api/doc.html to open the API documentation. You can debug APIs online without writing frontend code.
 
-#### 3. Redis 分布式登录配置
-1. 修改 `application.yml` 的 Redis 配置：
+#### 3. Redis Distributed Login Configuration
+1. Modify the Redis configuration in `application.yml`:
 ```yaml
 spring:
   redis:
@@ -163,15 +162,15 @@ spring:
     password: 123456
 ```
 
-2. 修改 `application.yml` 中的 session 存储方式：
+2. Modify the session storage type in `application.yml`:
 ```yaml
 spring:
   session:
     store-type: redis
 ```
 
-#### 4. Elasticsearch 搜索引擎配置
-1. 修改 `application.yml` 的 Elasticsearch 配置：
+#### 4. Elasticsearch Search Engine Configuration
+1. Modify the Elasticsearch configuration in `application.yml`:
 ```yaml
 spring:
   elasticsearch:
@@ -180,22 +179,22 @@ spring:
     password: 123456
 ```
 
-2. 复制 `sql/post_es_mapping.json` 文件中的内容，通过调用 Elasticsearch 的接口或者 Kibana Dev Tools 来创建索引（相当于数据库建表）：
+2. Copy the content of the `sql/post_es_mapping.json` file and use Elasticsearch API or Kibana Dev Tools to create an index (equivalent to creating a table in a database):
 ```
 PUT post_v1
 {
-  参数见 sql/post_es_mapping.json 文件
+  Parameters are in the sql/post_es_mapping.json file
 }
 ```
 
-3. 开启同步任务，将数据库的帖子同步到 Elasticsearch：找到 job 目录下的 `FullSyncPostToEs` 和 `IncSyncPostToEs` 文件，取消掉 `@Component` 注解的注释，再次执行程序即可触发同步：
+3. Enable synchronization tasks to synchronize posts from the database to Elasticsearch: Find the `FullSyncPostToEs` and `IncSyncPostToEs` files in the `job` directory, uncomment the `@Component` annotation, and run the program again to trigger synchronization:
 ```java
-// todo 取消注释开启任务
+// todo Uncomment to enable the task
 //@Component
 ```
 
-#### 5. 腾讯云 COS 配置 (可选)
-1. 在 `application.yml` 中配置腾讯云 COS 相关参数：
+#### 5. Tencent Cloud COS Configuration (Optional)
+1. Configure Tencent Cloud COS parameters in `application.yml`:
 ```yaml
 cos:
   client:
@@ -205,26 +204,26 @@ cos:
     bucket: your-bucket-name
 ```
 
-### 业务代码生成器使用
-支持自动生成 Service、Controller、数据模型代码，配合 MyBatisX 插件，可以快速开发增删改查等实用基础功能。
+### Business Code Generator Usage
+Supports automatic generation of Service, Controller, and data model code. Combined with the MyBatisX plugin, it can quickly develop basic CRUD functionalities.
 
-找到 `generate.CodeGenerator` 类，修改生成参数和生成路径，并且支持注释掉不需要的生成逻辑，然后运行即可：
+Find the `generate.CodeGenerator` class, modify the generation parameters and path, and you can comment out unnecessary generation logic. Then run it:
 ```java
-// 指定生成参数
+// Specify generation parameters
 String packageName = "com.HongyuanWang.learningforum";
-String dataName = "用户评论";
+String dataName = "User Comment"; // e.g., "用户评论" (User Comment)
 String dataKey = "userComment";
 String upperDataKey = "UserComment";
 ```
 
-生成代码后，可以移动到实际项目中，并且按照 // todo 注释的提示来针对自己的业务需求进行修改。
+After generating the code, you can move it to the actual project and modify it according to the `// todo` comments based on your business needs.
 
-## 🏗️ 项目架构
+## 🏗️ Project Architecture
 
-### 系统架构图
-![系统架构图](public/structure.png)
+### System Architecture Diagram
+![System Architecture Diagram](public/structure.png)
 
-### 代码结构
+### Code Structure
 ```
 F:\GITCODEHERE\LEARNING-FORUM\SRC
 |   .DS_Store
@@ -237,7 +236,7 @@ F:\GITCODEHERE\LEARNING-FORUM\SRC
 |   |   |           |   MainApplication.java
 |   |   |           |
 |   |   |           +---annotation
-|   |   |           |       AuthCheck.java  
+|   |   |           |       AuthCheck.java
 |   |   |           |
 |   |   |           +---aop
 |   |   |           |       AuthInterceptor.java
@@ -403,7 +402,7 @@ F:\GITCODEHERE\LEARNING-FORUM\SRC
 |   |   |           |   |   QuestionBankService.java
 |   |   |           |   |   QuestionService.java
 |   |   |           |   |   UserService.java
-|   |   |           |   |   
+|   |   |           |   |
 |   |   |           |   \---impl
 |   |   |           |           PostFavourServiceImpl.java
 |   |   |           |           PostServiceImpl.java
@@ -499,116 +498,116 @@ F:\GITCODEHERE\LEARNING-FORUM\SRC
                             EasyExcelTest.java
 ```
 
-### 分层设计
-- **Controller层**：负责接收请求、参数校验和返回结果
-- **Service层**：实现业务逻辑
-- **DAO层**：数据访问层，与数据库交互
-- **Model层**：数据模型，包括实体类、DTO、VO等
-- **Utils**：工具类，提供通用功能
-- **Config**：配置类，管理系统配置
-- **Job**：定时任务，实现数据同步等功能
-- **AOP**：切面处理，实现日志、权限等横切关注点
+### Layered Design
+- **Controller Layer**: Responsible for receiving requests, parameter validation, and returning results.
+- **Service Layer**: Implements business logic.
+- **DAO Layer**: Data Access Layer, interacts with the database.
+- **Model Layer**: Data models, including entities, DTOs, VOs, etc.
+- **Utils**: Utility classes, providing common functionalities.
+- **Config**: Configuration classes, managing system configurations.
+- **Job**: Scheduled tasks, implementing data synchronization, etc.
+- **AOP**: Aspect-Oriented Programming, implementing logging, permissions, and other cross-cutting concerns.
 
-## 📈 性能优化实践
+## 📈 Performance Optimization Practices
 
-### 数据库优化
-- 通过自定义索引优化查询性能
-- 使用Druid连接池监控SQL执行
-- 基于MyBatis Plus的批量操作提升性能
-- 避免大事务，保证事务粒度合理
-- 分页查询减轻数据库负载
+### Database Optimization
+- Improve query performance through custom index optimization.
+- Use Druid connection pool to monitor SQL execution.
+- Enhance performance with MyBatis Plus batch operations.
+- Avoid large transactions, ensuring reasonable transaction granularity.
+- Reduce database load with pagination queries.
 
-### 缓存优化
-- 采用多级缓存架构：
-  - Caffeine本地缓存 → Redis分布式缓存 → 数据库
-- 使用HotKey自动探测并缓存热点数据
-- 通过Redis BitMap存储用户操作记录，节省90%+存储空间
-- 合理设置缓存过期时间，避免缓存雪崩
+### Cache Optimization
+- Adopt a multi-level cache architecture:
+  - Caffeine local cache → Redis distributed cache → Database
+- Use HotKey to automatically detect and cache hot data.
+- Store user operation records with Redis BitMap, saving 90%+ storage space.
+- Set reasonable cache expiration times to prevent cache avalanches.
 
-### 并发处理
-- 使用CompletableFuture实现并行批处理
-- 通过Redisson分布式锁解决并发安全问题
-- 基于Redis Lua脚本保证计数器原子性
-- 合理使用线程池，避免资源浪费
+### Concurrency Handling
+- Use CompletableFuture for parallel batch processing.
+- Solve concurrency safety issues with Redisson distributed locks.
+- Ensure counter atomicity with Redis Lua scripts.
+- Use thread pools rationally to avoid resource waste.
 
-### 系统保护
-- 使用Sentinel实现接口限流和服务熔断
-- 对高频访问接口配置热点参数限流
-- 通过FallbackHandler实现服务降级，保证系统可用性
-- 采用拉模式将限流规则持久化到本地文件
+### System Protection
+- Use Sentinel for API rate limiting and service circuit breaking.
+- Configure hot parameter rate limiting for frequently accessed APIs.
+- Implement service degradation with FallbackHandler to ensure system availability.
+- Persist rate limiting rules locally using a pull model.
 
-## 🔐 安全特性
+## 🔐 Security Features
 
-### 用户认证与授权
-- 基于Sa-Token实现用户认证
-- RBAC权限模型，灵活控制权限
-- 自定义权限注解，全局统一校验
-- 同端互斥登录，防止账号共享
+### User Authentication and Authorization
+- User authentication based on Sa-Token.
+- RBAC permission model for flexible permission control.
+- Custom permission annotations for globally unified validation.
+- Mutually exclusive login on the same device to prevent account sharing.
 
-### 数据安全
-- 敏感信息加密存储
-- XSS防御和SQL注入防护
-- 长整数精度丢失解决方案
-- 全局异常处理，避免敏感信息泄露
+### Data Security
+- Encrypted storage of sensitive information.
+- XSS defense and SQL injection protection.
+- Solution for long integer precision loss.
+- Global exception handling to prevent sensitive information leakage.
 
-### 防爬虫策略
-- 基于Redis的用户访问频率统计
-- 多级防护机制：警告 → 人机验证 → 账号封禁
-- Lua脚本实现高效计数和原子性判断
-- 通过Nacos动态更新IP黑名单
+### Anti-Crawler Strategies
+- Redis-based user access frequency statistics.
+- Multi-level protection mechanism: Warning → Human verification → Account ban.
+- Lua scripts for efficient counting and atomicity checks.
+- Dynamic IP blacklist updates via Nacos.
 
-## 🌐 部署与运维
+## 🌐 Deployment and Operations
 
-### 本地开发环境
-- 支持热部署，提高开发效率
-- 多环境配置，适应不同开发阶段
-- 详细的日志配置，便于调试
+### Local Development Environment
+- Supports hot deployment, improving development efficiency.
+- Multi-environment configuration to adapt to different development stages.
+- Detailed logging configuration for easy debugging.
 
-### 测试环境
-- JUnit5单元测试覆盖核心业务
-- 模拟测试数据自动生成
-- 测试报告生成与分析
+### Test Environment
+- JUnit5 unit tests covering core business logic.
+- Automatic generation of mock test data.
+- Test report generation and analysis.
 
-### 生产环境部署
-- 基于Docker容器化部署
-- Nginx反向代理，解决跨域问题
-- 使用宝塔Linux面板简化运维
-- 支持CI/CD自动化部署
+### Production Environment Deployment
+- Docker-based containerized deployment.
+- Nginx reverse proxy to resolve cross-origin issues.
+- Simplified operations using Baota Linux Panel.
+- Supports CI/CD automated deployment.
 
-## 🔄 未来计划
+## 🔄 Future Plans
 
-- [ ] 集成Spring Cloud微服务架构
-- [ ] 添加实时消息推送功能
-- [ ] 引入AI智能推荐系统
-- [ ] 增加用户行为分析模块
-- [ ] 优化移动端适配
-- [ ] 完善国际化支持
+- [ ] Integrate Spring Cloud microservices architecture.
+- [ ] Add real-time message push functionality.
+- [ ] Introduce AI intelligent recommendation system.
+- [ ] Add user behavior analysis module.
+- [ ] Optimize mobile-end adaptation.
+- [ ] Improve internationalization support.
 
-## 🤝 贡献指南
+## 🤝 Contribution Guidelines
 
-欢迎提交Issue和Pull Request！
+Issues and Pull Requests are welcome!
 
-1. Fork本仓库
-2. 创建您的特性分支 (`git checkout -b feature/amazing-feature`)
-3. 提交您的修改 (`git commit -m 'Add some amazing feature'`)
-4. 将您的修改推送到分支 (`git push origin feature/amazing-feature`)
-5. 提交Pull Request
+1. Fork this repository.
+2. Create your feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes (`git commit -m 'Add some amazing feature'`).
+4. Push your changes to the branch (`git push origin feature/amazing-feature`).
+5. Submit a Pull Request.
 
-## 📜 许可证
+## 📜 License
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👨‍💻 关于作者
+## 👨‍💻 About the Author
 
-Hongyuan Wang - [个人主页](https://github.com/HongyuanWang)
+Hongyuan Wang - [Personal Homepage](https://github.com/HongyuanWang)
 
-## 致谢
+## Acknowledgements
 
-感谢所有为此项目做出贡献的开发者，以及提供技术支持的开源社区。
+Thanks to all developers who contributed to this project and the open-source communities that provided technical support.
 
 ---
 
 <div align="center">
-  <p>如果这个项目对您有帮助，请给它一个⭐️！</p>
-  <p>项目持续更新中，敬请关注...</p>
+  <p>If this project is helpful to you, please give it a ⭐️!</p>
+  <p>The project is continuously being updated, please stay tuned...</p>
 </div>
