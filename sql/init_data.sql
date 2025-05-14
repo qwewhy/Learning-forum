@@ -11,7 +11,7 @@ VALUES (1, 'user1', 'b0dd3697a192885d7c055db46155b26a', 'unionId1', 'mpOpenId1',
         'https://www.code-nav.cn/logo.png', '分析化学爱好者', 'user'),
        (4, 'user4', 'b0dd3697a192885d7c055db46155b26a', 'unionId4', 'mpOpenId4', 'user4',
         'https://www.code-nav.cn/logo.png', '物理化学研究员', 'user'),
-       (5, 'yupi', 'b0dd3697a192885d7c055db46155b26a', NULL, NULL, '化学教授', 'https://www.code-nav.cn/logo.png',
+       (5, 'hongyuan', 'b0dd3697a192885d7c055db46155b26a', NULL, NULL, '化学教授', 'https://www.code-nav.cn/logo.png',
         '系统管理员', 'admin');
 
 -- 题库表初始数据
