@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * @author <a href="https://github.com/HongyuanWang">Hongyuan Wang</a>
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.RUNTIME)  // 添加这一行！
 public @interface AuthCheck {
 
     /**
@@ -22,4 +22,3 @@ public @interface AuthCheck {
     String mustRole() default "";
 
 }
-

@@ -185,12 +185,18 @@ public class QuestionController {
     @GetMapping("/get/vo")
     public BaseResponse<QuestionVO> getQuestionVOById(long id, HttpServletRequest request) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
-        // 检测和处置爬虫
-        User loginUser = userService.getLoginUser(request);
-        //crawlerDetect(loginUser.getId());
+
+        // 检测和处置爬虫 - 使用 getLoginUserPermitNull 而不是 getLoginUser
+        User loginUser = userService.getLoginUserPermitNull(request);
+        if (loginUser != null) {
+            // 只有登录用户才做爬虫检测
+            crawlerDetect(loginUser.getId());
+        }
+
         // 查询数据库
         Question question = questionService.getById(id);
         ThrowUtils.throwIf(question == null, ErrorCode.NOT_FOUND_ERROR);
+
         // 获取封装类
         return ResultUtils.success(questionService.getQuestionVO(question, request));
     }
