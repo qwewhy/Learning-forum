@@ -120,11 +120,11 @@ knife4j:
         api-rule-resources:
           - com.HongyuanWang.learningforum.controller
 # 热 key 探测
-hotkey:
-  app-name: ChemNexus
-  caffeine-size: 10000
-  push-period: 1000
-  etcd-server: http://localhost:2379
+#hotkey:
+#  app-name: ChemNexus
+#  caffeine-size: 10000
+#  push-period: 1000
+#  etcd-server: http://localhost:2379
 # 配置中心
 nacos:
   config:
