@@ -99,6 +99,11 @@ public class User implements Serializable {
      */
     private Long vipNumber;
 
+    /**
+     * Stripe Customer ID
+     */
+    private String stripeCustomerId;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

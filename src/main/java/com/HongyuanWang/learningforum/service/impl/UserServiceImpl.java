@@ -19,6 +19,11 @@ import com.HongyuanWang.learningforum.model.vo.UserVO;
 import com.HongyuanWang.learningforum.service.UserService;
 import com.HongyuanWang.learningforum.utils.SqlUtils;
 import com.HongyuanWang.learningforum.constant.RedisConstant;
+import com.HongyuanWang.learningforum.service.SubscriptionService;
+import com.HongyuanWang.learningforum.model.entity.Subscription;
+import com.HongyuanWang.learningforum.model.enums.SubscriptionPlan;
+import com.HongyuanWang.learningforum.model.enums.SubscriptionStatus;
+import org.springframework.context.annotation.Lazy;
 
 import java.time.LocalDate;
 import java.time.Year;
@@ -47,6 +52,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     public RedissonClient redissonClient;
+
+    @Resource
+    @Lazy
+    private SubscriptionService subscriptionService;
     /**
      * 盐值，混淆密码
      */
@@ -263,6 +272,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
+
+        // 获取并设置当前订阅计划
+        try {
+            Subscription activeSubscription = subscriptionService.getActiveSubscriptionByUserId(user.getId());
+            if (activeSubscription != null && 
+                (SubscriptionStatus.ACTIVE.getValue().equals(activeSubscription.getStatus()) || 
+                 SubscriptionStatus.TRIALING.getValue().equals(activeSubscription.getStatus()))) {
+                SubscriptionPlan plan = SubscriptionPlan.getEnumByValue(activeSubscription.getPlan());
+                if (plan != null) {
+                    userVO.setCurrentSubscriptionPlan(plan.getDescription()); // 或者 plan.getValue()，取决于您想显示什么
+                } else {
+                     userVO.setCurrentSubscriptionPlan("未知计划"); // 或者留空
+                }
+            } else {
+                userVO.setCurrentSubscriptionPlan("未订阅"); // 或者留空
+            }
+        } catch (Exception e) {
+            log.error("获取用户 {} 的订阅计划失败: {}", user.getId(), e.getMessage());
+            userVO.setCurrentSubscriptionPlan("获取失败"); // 发生错误时的回退值
+        }
         return userVO;
     }
 
@@ -343,5 +372,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             index = bitSet.nextSetBit(index+1);
         }
         return dayList;
+    }
+
+    @Override
+    public User getUserByStripeCustomerId(String stripeCustomerId) {
+        if (StringUtils.isBlank(stripeCustomerId)) {
+            return null;
+        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("stripeCustomerId", stripeCustomerId);
+        return this.baseMapper.selectOne(queryWrapper);
     }
 }

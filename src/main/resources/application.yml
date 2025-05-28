@@ -12,10 +12,13 @@ spring:
   # 默认 dev 环境
   profiles:
     active: dev
+  # 允许循环引用（作为备选方案，但不推荐）
+  main:
+    allow-circular-references: false
   # 支持 swagger3
   mvc:
     pathmatch:
-      matching-strategy: ant_path_matcher
+      matching-strategy: ANT_PATH_MATCHER
   # session 配置
   session:
     store-type: redis
@@ -24,9 +27,9 @@ spring:
   # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/learning_forum?serverTimezone=${app.timezone}
-    username: root
-    password: 123456
+    url: jdbc:mysql://43.165.196.25:3306/chemxnexus?serverTimezone=${app.timezone}
+    username: chemxnexus_user
+    password: Why20020721
     druid:
       # 配置初始化大小、最小、最大
       initial-size: 10
@@ -202,4 +205,8 @@ sa-token:
   token-style: uuid
   # 是否输出操作日志（生产环境要false
   is-log: true
+
+# Stripe 配置
+stripe:
+
 

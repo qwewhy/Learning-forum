@@ -43,5 +43,11 @@ public class UserVO implements Serializable {
      */
     private Date createTime;
 
+    /**
+     * 当前订阅计划
+     * @see com.HongyuanWang.learningforum.model.enums.SubscriptionPlan
+     */
+    private String currentSubscriptionPlan;
+
     private static final long serialVersionUID = 1L;
 }

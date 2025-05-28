@@ -21,6 +21,9 @@ import com.HongyuanWang.learningforum.model.entity.User;
 import com.HongyuanWang.learningforum.model.vo.LoginUserVO;
 import com.HongyuanWang.learningforum.model.vo.UserVO;
 import com.HongyuanWang.learningforum.service.UserService;
+import com.HongyuanWang.learningforum.service.SubscriptionService;
+import com.HongyuanWang.learningforum.model.dto.subscription.SubscriptionCheckoutRequest;
+import com.HongyuanWang.learningforum.model.dto.subscription.CreatePortalSessionRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
 import me.chanjar.weixin.mp.api.WxMpService;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.DigestUtils;
@@ -62,6 +66,9 @@ public class UserController {
 
     @Resource
     private WxOpenConfig wxOpenConfig;
+
+    @Resource
+    private SubscriptionService subscriptionService;
 
     // region 登录相关
 
@@ -336,4 +343,51 @@ public class UserController {
         List<Integer> userSignInRecord = userService.getUserSignInRecord(loginUser.getId(), year);
         return ResultUtils.success(userSignInRecord);
     }
+
+    // region 订阅相关
+
+    /**
+     * 创建Stripe订阅结账会话
+     * 用户选择一个价格ID对应的计划进行订阅
+     *
+     * @param checkoutRequest 包含 priceId 和前端的回调 URL
+     * @param request
+     * @return 包含Stripe Checkout Session URL的响应
+     */
+    @PostMapping("/subscription/checkout")
+    public BaseResponse<String> createSubscriptionCheckoutSession(@RequestBody SubscriptionCheckoutRequest checkoutRequest, HttpServletRequest request) {
+        log.info("收到订阅结账请求，参数：{}", checkoutRequest);
+        ThrowUtils.throwIf(checkoutRequest == null, ErrorCode.PARAMS_ERROR, "请求参数不能为空");
+        String priceId = checkoutRequest.getPriceId();
+        log.info("解析得到的priceId：{}", priceId);
+        // String successUrl = checkoutRequest.getSuccessUrl(); // Removed
+        // String cancelUrl = checkoutRequest.getCancelUrl(); // Removed
+
+        ThrowUtils.throwIf(StringUtils.isBlank(priceId), ErrorCode.PARAMS_ERROR, "priceId不能为空");
+
+        User loginUser = userService.getLoginUser(request);
+
+        com.stripe.model.checkout.Session stripeSession = subscriptionService.createCheckoutSession(loginUser, priceId);
+        return ResultUtils.success(stripeSession.getUrl());
+    }
+
+    /**
+     * 创建Stripe客户订阅管理门户会话
+     * 用户通过此会话管理自己的订阅
+     *
+     * @param request
+     * @return 包含Stripe Customer Portal Session URL的响应
+     */
+    @PostMapping("/subscription/portal")
+    public BaseResponse<String> createCustomerPortalSession(HttpServletRequest request) { // Removed @RequestBody CreatePortalSessionRequest portalRequest
+        // ThrowUtils.throwIf(portalRequest == null, ErrorCode.PARAMS_ERROR, "请求参数不能为空"); // Removed
+        // String returnUrl = portalRequest.getReturnUrl(); // Removed
+        // ThrowUtils.throwIf(StringUtils.isBlank(returnUrl), ErrorCode.PARAMS_ERROR, "returnUrl不能为空"); // Removed
+        
+        User loginUser = userService.getLoginUser(request);
+        com.stripe.model.billingportal.Session portalSession = subscriptionService.createCustomerPortalSession(loginUser);
+        return ResultUtils.success(portalSession.getUrl());
+    }
+
+    // endregion
 }

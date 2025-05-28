@@ -142,3 +142,119 @@ String upperDataKey = "UserComment";
 - 合理分层
 - 代码注释完善
 - 快速上手便捷
+
+### Stripe 订阅服务集成
+本项目集成了 Stripe 用于处理付费订阅服务。允许通过注解控制对特定 API 的访问权限，区分不同订阅级别的用户。
+
+#### 1. 配置 Stripe
+在 `src/main/resources/application.yml` (或 `.properties`) 文件中配置您的 Stripe API 密钥和价格 ID：
+
+```yaml
+stripe:
+  secretKey: sk_test_your_stripe_secret_key # 替换为您的Stripe Secret Key
+  publishableKey: pk_test_your_stripe_publishable_key # 替换为您的Stripe Publishable Key
+  webhookSecret: whsec_your_stripe_webhook_secret # 替换为您的Stripe Webhook Signing Secret
+  basicPriceId: price_your_basic_plan_price_id # 基础版价格ID
+  premiumPriceId: price_your_premium_plan_price_id # 高级版价格ID
+  enterprisePriceId: price_your_enterprise_plan_price_id # 企业版价格ID
+```
+
+#### 2. 数据库迁移
+执行以下 SQL 语句以创建 `subscription` 表并更新 `user` 表：
+
+```sql
+-- 创建 subscription 表
+CREATE TABLE `subscription` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `user_id` bigint(20) NOT NULL COMMENT '用户ID',
+  `stripe_customer_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Stripe Customer ID',
+  `stripe_subscription_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Stripe Subscription ID',
+  `stripe_price_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Stripe Price ID',
+  `plan` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '订阅计划 (basic, premium, enterprise)',
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '订阅状态 (active, canceled, past_due, unpaid, trialing)',
+  `current_period_start` timestamp NULL DEFAULT NULL COMMENT '当前计费周期开始时间',
+  `current_period_end` timestamp NULL DEFAULT NULL COMMENT '当前计费周期结束时间',
+  `cancel_at_period_end` tinyint(1) DEFAULT '0' COMMENT '是否在周期末取消',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_stripe_subscription_id` (`stripe_subscription_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_stripe_customer_id` (`stripe_customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户订阅表';
+
+-- 在 user 表中添加 stripe_customer_id 字段
+ALTER TABLE `user`
+ADD COLUMN `stripe_customer_id` VARCHAR(255) NULL DEFAULT NULL COMMENT 'Stripe Customer ID' AFTER `vipNumber`,
+ADD INDEX `idx_stripe_customer_id` (`stripe_customer_id`);
+```
+
+#### 3. Stripe Webhook 配置
+在您的 Stripe Dashboard 中，配置一个 Webhook 端点，指向您部署的应用的 `/stripe/webhook` 路径 (例如 `https://yourdomain.com/api/stripe/webhook`)。
+
+确保选择监听以下事件：
+- `checkout.session.completed`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.payment_succeeded`
+- `invoice.payment_failed`
+
+将 Stripe 生成的 Webhook Signing Secret 配置到 `application.yml` 的 `stripe.webhookSecret` 中。
+
+#### 4. 使用 `@RequireSubscription` 注解
+通过 `@RequireSubscription` 注解可以控制对 Controller 方法或整个 Controller 类的访问权限。该注解可以指定所需的最低订阅级别。
+
+**注解参数：**
+- `value`: `SubscriptionPlan` 枚举类型，指定要求的最低订阅计划（默认为 `SubscriptionPlan.BASIC`）。可选值：`BASIC`, `PREMIUM`, `ENTERPRISE`。
+- `required`: boolean 类型，指示订阅是否为强制性的（默认为 `true`）。
+
+**示例：**
+
+保护单个 Controller 方法，要求至少为高级版订阅：
+```java
+import com.HongyuanWang.learningforum.annotation.RequireSubscription;
+import com.HongyuanWang.learningforum.model.enums.SubscriptionPlan;
+// ...
+
+@RestController
+@RequestMapping("/api/premium-feature")
+public class PremiumFeatureController {
+
+    @GetMapping("/access")
+    @RequireSubscription(SubscriptionPlan.PREMIUM)
+    public BaseResponse<String> accessPremiumFeature() {
+        return ResultUtils.success("成功访问高级功能!");
+    }
+}
+```
+
+保护整个 Controller 类，所有方法都要求至少为基础版订阅：
+```java
+import com.HongyuanWang.learningforum.annotation.RequireSubscription;
+// ...
+
+@RestController
+@RequestMapping("/api/basic-feature")
+@RequireSubscription // 默认为 BASIC
+public class BasicFeatureController {
+
+    @GetMapping("/info")
+    public BaseResponse<String> getBasicInfo() {
+        return ResultUtils.success("成功获取基础信息!");
+    }
+}
+```
+
+如果用户未登录、没有有效订阅或订阅级别不满足要求，访问受保护的 API 时将返回相应的错误信息。
+
+#### 5. 核心组件
+- **`StripeConfig.java`**: 配置 Stripe API 密钥和价格 ID。
+- **`Subscription.java`**: 用户订阅信息的实体类。
+- **`SubscriptionMapper.java`**: `Subscription` 实体的 MyBatis Plus Mapper。
+- **`SubscriptionPlan.java`, `SubscriptionStatus.java`**: 定义订阅计划和状态的枚举。
+- **`RequireSubscription.java`**: 权限控制注解。
+- **`SubscriptionAspect.java`**: AOP 切面，实现基于 `@RequireSubscription` 的权限校验逻辑。
+- **`SubscriptionService.java` / `SubscriptionServiceImpl.java`**: 处理订阅相关业务逻辑，包括创建 Stripe Checkout Session 和处理 Stripe Webhook 事件。
+- **`StripeWebhookController.java`**:接收并验证来自 Stripe 的 Webhook 事件，并将其分发给 `SubscriptionService` 处理。
+- **`User.java`**: 扩展了 `stripeCustomerId` 字段。
+- **`UserService.java` / `UserServiceImpl.java`**: 扩展了通过 `stripeCustomerId` 查询用户的方法。

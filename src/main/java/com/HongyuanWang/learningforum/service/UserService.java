@@ -129,4 +129,12 @@ public interface UserService extends IService<User> {
 
     //获取用户某个年份的签到记录
     List<Integer> getUserSignInRecord(long userId, Integer year);
+
+    /**
+     * 根据 Stripe Customer ID 获取用户
+     *
+     * @param stripeCustomerId Stripe Customer ID
+     * @return 用户实体，如果找不到则返回 null
+     */
+    User getUserByStripeCustomerId(String stripeCustomerId);
 }
