@@ -61,10 +61,14 @@ public class StripeWebhookController {
                     subscriptionService.handleSubscriptionDeleted(event);
                     break;
                 case "invoice.payment_succeeded":
+                case "invoice.paid":
                     subscriptionService.handleInvoicePaymentSucceeded(event);
                     break;
                 case "invoice.payment_failed":
                     subscriptionService.handleInvoicePaymentFailed(event);
+                    break;
+                case "invoice_payment.paid":
+                    subscriptionService.handleInvoicePaymentPaid(event);
                     break;
                 default:
                     log.info("Unhandled Stripe event type: {}", event.getType());

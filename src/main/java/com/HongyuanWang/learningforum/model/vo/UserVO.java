@@ -49,5 +49,20 @@ public class UserVO implements Serializable {
      */
     private String currentSubscriptionPlan;
 
+    /**
+     * 年级
+     */
+    private String grade;
+
+    /**
+     * 工作经验
+     */
+    private String workExperience;
+
+    /**
+     * 擅长方向
+     */
+    private String expertiseDirection;
+
     private static final long serialVersionUID = 1L;
 }

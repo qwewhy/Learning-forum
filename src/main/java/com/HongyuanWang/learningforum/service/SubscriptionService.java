@@ -80,6 +80,14 @@ public interface SubscriptionService {
     void handleInvoicePaymentFailed(Event event);
 
     /**
+     * 处理 Stripe Webhook 事件：invoice_payment.paid
+     * 当发票支付成功时（通过 InvoicePayment 对象）触发
+     *
+     * @param event Stripe Event 对象
+     */
+    void handleInvoicePaymentPaid(Event event);
+
+    /**
      * 根据 Stripe Subscription ID 查找本地订阅记录
      * @param stripeSubscriptionId Stripe 订阅ID
      * @return 本地订阅实体
@@ -92,4 +100,11 @@ public interface SubscriptionService {
      * @return 是否成功
      */
     boolean saveOrUpdateSubscription(Subscription subscription);
+
+    /**
+     * 验证用户是否具备订阅条件（主要是邮箱验证）
+     * @param user 用户实体
+     * @return 是否具备订阅条件
+     */
+    boolean validateUserForSubscription(User user);
 } 

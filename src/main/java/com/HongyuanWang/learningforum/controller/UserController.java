@@ -12,6 +12,7 @@ import com.HongyuanWang.learningforum.constant.UserConstant;
 import com.HongyuanWang.learningforum.exception.BusinessException;
 import com.HongyuanWang.learningforum.exception.ThrowUtils;
 import com.HongyuanWang.learningforum.model.dto.user.UserAddRequest;
+import com.HongyuanWang.learningforum.model.dto.user.UserEditRequest;
 import com.HongyuanWang.learningforum.model.dto.user.UserLoginRequest;
 import com.HongyuanWang.learningforum.model.dto.user.UserQueryRequest;
 import com.HongyuanWang.learningforum.model.dto.user.UserRegisterRequest;
@@ -209,6 +210,8 @@ public class UserController {
         return ResultUtils.success(b);
     }
 
+    
+
     /**
      * 更新用户
      *
@@ -329,6 +332,30 @@ public class UserController {
         return ResultUtils.success(true);
     }
 
+    /**
+     * 编辑用户信息(支持用户和管理员)
+     *
+     * @param userEditRequest 编辑请求(包含需要更新的字段)
+     * @param request HTTP 请求
+     * @return 是否成功
+     */
+    @PostMapping("/edit")
+    public BaseResponse<Boolean> editUser(@RequestBody UserEditRequest userEditRequest, HttpServletRequest request) {
+        if (userEditRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 构建更新对象
+        User user = new User();
+        BeanUtils.copyProperties(userEditRequest, user);
+        // 如果是用户编辑自己，强制设置 ID 为当前用户 ID(防止越权修改)
+        user.setId(loginUser.getId());
+        boolean result = userService.updateById(user);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
+
     @PostMapping("/add/sign_in")
     public BaseResponse<Boolean> addUserSignIn(HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
@@ -366,6 +393,10 @@ public class UserController {
         ThrowUtils.throwIf(StringUtils.isBlank(priceId), ErrorCode.PARAMS_ERROR, "priceId不能为空");
 
         User loginUser = userService.getLoginUser(request);
+        
+        // 验证用户是否具备订阅条件（主要是邮箱验证）
+        boolean isValidForSubscription = subscriptionService.validateUserForSubscription(loginUser);
+        ThrowUtils.throwIf(!isValidForSubscription, ErrorCode.PARAMS_ERROR, "请先完善您的个人信息（特别是邮箱地址）后再进行订阅");
 
         com.stripe.model.checkout.Session stripeSession = subscriptionService.createCheckoutSession(loginUser, priceId);
         return ResultUtils.success(stripeSession.getUrl());

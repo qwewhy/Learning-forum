@@ -61,10 +61,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public Subscription getActiveSubscriptionByUserId(Long userId) {
         QueryWrapper<Subscription> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId)
+        queryWrapper.eq("userId", userId)
                 .and(qw -> qw.eq("status", SubscriptionStatus.ACTIVE.getValue())
                         .or().eq("status", SubscriptionStatus.TRIALING.getValue()))
-                .orderByDesc("create_time")
+                .orderByDesc("createTime")
                 .last("LIMIT 1");
         return subscriptionMapper.selectOne(queryWrapper);
     }
@@ -75,9 +75,22 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         String stripeCustomerId = user.getStripeCustomerId();
         if (stripeCustomerId == null || stripeCustomerId.isEmpty()) {
             try {
+                // 验证用户邮箱
+                String userEmail = user.getEmail();
+                if (userEmail == null || userEmail.trim().isEmpty()) {
+                    log.error("用户 {} 没有设置邮箱，无法创建Stripe Customer", user.getId());
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "请先设置您的邮箱地址后再进行订阅");
+                }
+                
+                // 简单的邮箱格式验证
+                if (!userEmail.contains("@") || !userEmail.contains(".")) {
+                    log.error("用户 {} 的邮箱格式无效: {}", user.getId(), userEmail);
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "请设置有效的邮箱地址后再进行订阅");
+                }
+                
                 Map<String, Object> customerParams = new HashMap<>();
-                customerParams.put("email", user.getUserAccount());
-                customerParams.put("name", user.getUserName());
+                customerParams.put("email", userEmail);
+                customerParams.put("name", user.getUserName() != null ? user.getUserName() : user.getUserAccount());
                 Map<String, String> metadata = new HashMap<>();
                 metadata.put("app_user_id", user.getId().toString());
                 customerParams.put("metadata", metadata);
@@ -144,8 +157,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     @Transactional
     public void handleCheckoutSessionCompleted(Event event) {
+        log.info("开始处理 checkout.session.completed 事件, Event ID: {}", event.getId());
+        
         EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-        StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
+        StripeObject stripeObject = null;
+        
+        // 先尝试从 deserializer 获取
+        if (dataObjectDeserializer != null && dataObjectDeserializer.getObject().isPresent()) {
+            stripeObject = dataObjectDeserializer.getObject().get();
+        }
+        
+        // 如果失败，尝试直接从 getData() 获取
+        if (stripeObject == null && event.getData() != null) {
+            stripeObject = event.getData().getObject();
+        }
+        
         ThrowUtils.throwIf(stripeObject == null, ErrorCode.SYSTEM_ERROR, "Webhook event data object is not present for event: " + event.getId());
 
         if (stripeObject instanceof com.stripe.model.checkout.Session) {
@@ -155,7 +181,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             String appUserIdStr = session.getMetadata().get("app_user_id");
             String priceId = session.getMetadata().get("price_id");
 
-            ThrowUtils.throwIf(appUserIdStr == null, ErrorCode.SYSTEM_ERROR, "Webhook checkout.session.completed: app_user_id not found. Session ID: " + session.getId());
+            ThrowUtils.throwIf(appUserIdStr == null, ErrorCode.SYSTEM_ERROR, "Webhook checkout.session.completed: app_user_id not found in metadata. Session ID: " + session.getId());
+            log.info("Webhook checkout.session.completed: Retrieved app_user_id '{}' from metadata for session_id {}", appUserIdStr, session.getId());
+            ThrowUtils.throwIf(priceId == null, ErrorCode.SYSTEM_ERROR, "Webhook checkout.session.completed: price_id not found in metadata. Session ID: " + session.getId());
+            log.info("Webhook checkout.session.completed: Retrieved price_id '{}' from metadata for session_id {}", priceId, session.getId());
+
             Long appUserId;
             try {
                 appUserId = Long.parseLong(appUserIdStr);
@@ -266,20 +296,45 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Transactional
     public void handleInvoicePaymentSucceeded(Event event) {
         EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-        StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
+        StripeObject stripeObject = null;
+        if (event.getData() != null) {
+            stripeObject = event.getData().getObject();
+        }
         ThrowUtils.throwIf(stripeObject == null, ErrorCode.SYSTEM_ERROR, "Webhook event data object is not present for event: " + event.getId());
 
         if (stripeObject instanceof Invoice) {
             Invoice invoice = (Invoice) stripeObject;
             log.info("处理 invoice.payment_succeeded 事件, Invoice ID: {}, Subscription ID: {}", invoice.getId(), invoice.getSubscription());
 
-            ThrowUtils.throwIf(invoice.getSubscription() == null, ErrorCode.OPERATION_ERROR, "Webhook invoice.payment_succeeded: Invoice " + invoice.getId() + " 不包含订阅信息，可能是单次支付。");
+            String subscriptionId = invoice.getSubscription();
+            
+            // 如果 getSubscription() 返回 null，尝试从 JSON 数据中获取
+            if (subscriptionId == null && stripeObject.getRawJsonObject() != null) {
+                try {
+                    // 尝试从 parent.subscription_details.subscription 获取
+                    if (stripeObject.getRawJsonObject().has("parent") && 
+                        stripeObject.getRawJsonObject().get("parent").getAsJsonObject().has("subscription_details") &&
+                        stripeObject.getRawJsonObject().get("parent").getAsJsonObject().get("subscription_details").getAsJsonObject().has("subscription")) {
+                        subscriptionId = stripeObject.getRawJsonObject().get("parent").getAsJsonObject()
+                            .get("subscription_details").getAsJsonObject()
+                            .get("subscription").getAsString();
+                        log.info("从 invoice.parent.subscription_details.subscription 获取到订阅ID: {}", subscriptionId);
+                    }
+                } catch (Exception e) {
+                    log.error("尝试从 JSON 数据提取订阅ID时出错: {}", e.getMessage(), e);
+                }
+            }
+
+            if (subscriptionId == null) {
+                log.info("Webhook invoice.payment_succeeded: Invoice {} 不包含订阅ID，可能是一次性支付或非订阅相关发票，跳过处理。", invoice.getId());
+                return; // 直接返回，不作为错误处理
+            }
             
             com.stripe.model.Subscription stripeSubscription;
             try {
-                stripeSubscription = com.stripe.model.Subscription.retrieve(invoice.getSubscription());
+                stripeSubscription = com.stripe.model.Subscription.retrieve(subscriptionId);
             } catch (StripeException e) {
-                log.error("Webhook invoice.payment_succeeded: 无法从Stripe获取订阅详情. Stripe Subscription ID: {}, Error: {}", invoice.getSubscription(), e.getMessage(), e);
+                log.error("Webhook invoice.payment_succeeded: 无法从Stripe获取订阅详情. Stripe Subscription ID: {}, Error: {}", subscriptionId, e.getMessage(), e);
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Webhook处理错误：获取订阅详情失败");
             }
 
@@ -315,7 +370,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Transactional
     public void handleInvoicePaymentFailed(Event event) {
         EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-        StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
+        StripeObject stripeObject = null;
+        if (event.getData() != null) {
+            stripeObject = event.getData().getObject();
+        }
         ThrowUtils.throwIf(stripeObject == null, ErrorCode.SYSTEM_ERROR, "Webhook event data object is not present for event: " + event.getId());
 
         if (stripeObject instanceof Invoice) {
@@ -378,6 +436,109 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
+    @Override
+    @Transactional
+    public void handleInvoicePaymentPaid(Event event) {
+        StripeObject stripeObject = null;
+        if (event.getData() != null) {
+            stripeObject = event.getData().getObject();
+        }
+        ThrowUtils.throwIf(stripeObject == null, ErrorCode.SYSTEM_ERROR, "Webhook event data object is not present for event: " + event.getId());
+
+        // 改用更稳定的方式检查对象类型
+        try {
+            // 直接尝试获取字段，如果是 invoice_payment 对象，这些字段应该存在
+            String objectType = null;
+            String invoicePaymentId = null;
+            String invoiceId = null;
+            
+            // 先检查 getRawJsonObject() 是否可用
+            if (stripeObject.getRawJsonObject() != null) {
+                if (stripeObject.getRawJsonObject().has("object")) {
+                    objectType = stripeObject.getRawJsonObject().get("object").getAsString();
+                }
+                if (stripeObject.getRawJsonObject().has("id")) {
+                    invoicePaymentId = stripeObject.getRawJsonObject().get("id").getAsString();
+                }
+                if (stripeObject.getRawJsonObject().has("invoice")) {
+                    invoiceId = stripeObject.getRawJsonObject().get("invoice").getAsString();
+                }
+            }
+            
+            // 如果 getRawJsonObject() 不可用，直接从事件类型判断
+            if (objectType == null && "invoice_payment.paid".equals(event.getType())) {
+                log.info("handleInvoicePaymentPaid: 无法从 StripeObject 获取详细信息，但事件类型为 invoice_payment.paid，跳过处理。Event ID: {}", event.getId());
+                return;
+            }
+            
+            if (!"invoice_payment".equals(objectType)) {
+                log.warn("handleInvoicePaymentPaid: 事件对象类型不匹配，期望 'invoice_payment'，实际 '{}'。Event ID: {}", objectType, event.getId());
+                return;
+            }
+
+            log.info("处理 invoice_payment.paid 事件, InvoicePayment ID: {}, Invoice ID: {}", invoicePaymentId, invoiceId);
+
+            if (invoiceId == null) {
+                log.info("Webhook invoice_payment.paid: InvoicePayment {} 不包含 Invoice ID，跳过处理。", invoicePaymentId);
+                return;
+            }
+
+            Invoice invoice;
+            try {
+                invoice = Invoice.retrieve(invoiceId);
+            } catch (StripeException e) {
+                log.error("Webhook invoice_payment.paid: 无法从Stripe获取Invoice详情. Invoice ID: {}, Error: {}", invoiceId, e.getMessage(), e);
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Webhook处理错误：获取Invoice详情失败 (invoice_payment.paid)");
+            }
+
+            String stripeSubscriptionId = invoice.getSubscription();
+            if (stripeSubscriptionId == null) {
+                log.info("Webhook invoice_payment.paid: Invoice {} (从 InvoicePayment {} 获取) 不包含订阅ID，可能是一次性支付或非订阅相关发票，跳过处理。", invoiceId, invoicePaymentId);
+                return;
+            }
+
+            com.stripe.model.Subscription stripeSubscription;
+            try {
+                stripeSubscription = com.stripe.model.Subscription.retrieve(stripeSubscriptionId);
+            } catch (StripeException e) {
+                log.error("Webhook invoice_payment.paid: 无法从Stripe获取订阅详情. Stripe Subscription ID: {}, Error: {}", stripeSubscriptionId, e.getMessage(), e);
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Webhook处理错误：获取订阅详情失败 (invoice_payment.paid)");
+            }
+
+            Subscription localSubscription = findByStripeSubscriptionId(stripeSubscription.getId());
+            if (localSubscription == null) {
+                log.error("Webhook invoice_payment.paid: 未找到本地订阅记录. Stripe Subscription ID: {}. 尝试自动修复或创建.", stripeSubscription.getId());
+                User user = userService.getUserByStripeCustomerId(stripeSubscription.getCustomer());
+                ThrowUtils.throwIf(user == null, ErrorCode.SYSTEM_ERROR, "Webhook invoice_payment.paid: 无法通过Stripe Customer ID " + stripeSubscription.getCustomer() + " 找到用户。");
+
+                localSubscription = new Subscription();
+                localSubscription.setUserId(user.getId());
+                localSubscription.setStripeCustomerId(stripeSubscription.getCustomer());
+                localSubscription.setStripeSubscriptionId(stripeSubscription.getId());
+            }
+
+            String priceId = stripeSubscription.getItems().getData().get(0).getPrice().getId();
+            localSubscription.setStripePriceId(priceId);
+            localSubscription.setPlan(getPlanValueByPriceId(priceId));
+            localSubscription.setStatus(stripeSubscription.getStatus());
+            localSubscription.setCurrentPeriodStart(new Date(stripeSubscription.getCurrentPeriodStart() * 1000L));
+            localSubscription.setCurrentPeriodEnd(new Date(stripeSubscription.getCurrentPeriodEnd() * 1000L));
+            localSubscription.setCancelAtPeriodEnd(stripeSubscription.getCancelAtPeriodEnd() != null && stripeSubscription.getCancelAtPeriodEnd());
+
+            boolean saved = saveOrUpdateSubscription(localSubscription);
+            ThrowUtils.throwIf(!saved, ErrorCode.SYSTEM_ERROR, "更新订阅信息失败 (invoice_payment.paid)");
+            log.info("用户 {} 的订阅 {} 已成功续费/更新 (invoice_payment.paid from InvoicePayment ID: {}, Invoice ID: {})", localSubscription.getUserId(), stripeSubscription.getId(), invoicePaymentId, invoiceId);
+
+        } catch (Exception e) {
+            log.error("处理 invoice_payment.paid 事件时发生错误: {}, Event ID: {}", e.getMessage(), event.getId(), e);
+            if (e instanceof BusinessException) {
+                throw e;
+            } else {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Webhook 处理 invoice_payment.paid 事件失败: " + e.getMessage());
+            }
+        }
+    }
+
     private String getPlanValueByPriceId(String priceId) {
         ThrowUtils.throwIf(priceId == null, ErrorCode.PARAMS_ERROR, "Price ID 不能为空");
         if (priceId.equals(stripeConfig.getBasicPriceId())) return SubscriptionPlan.BASIC.getValue();
@@ -391,7 +552,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public Subscription findByStripeSubscriptionId(String stripeSubscriptionId) {
         ThrowUtils.throwIf(stripeSubscriptionId == null || stripeSubscriptionId.isEmpty(), ErrorCode.PARAMS_ERROR, "Stripe Subscription ID 不能为空");
         QueryWrapper<Subscription> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("stripe_subscription_id", stripeSubscriptionId);
+        queryWrapper.eq("stripeSubscriptionId", stripeSubscriptionId);
         return subscriptionMapper.selectOne(queryWrapper);
     }
 
@@ -414,5 +575,26 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setUpdateTime(new Date());
             return subscriptionMapper.updateById(subscription) > 0;
         }
+    }
+
+    @Override
+    public boolean validateUserForSubscription(User user) {
+        if (user == null) {
+            return false;
+        }
+        
+        String userEmail = user.getEmail();
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            log.warn("用户 {} 没有设置邮箱，不具备订阅条件", user.getId());
+            return false;
+        }
+        
+        // 简单的邮箱格式验证
+        if (!userEmail.contains("@") || !userEmail.contains(".")) {
+            log.warn("用户 {} 的邮箱格式无效: {}", user.getId(), userEmail);
+            return false;
+        }
+        
+        return true;
     }
 } 

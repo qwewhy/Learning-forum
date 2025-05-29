@@ -39,7 +39,7 @@ public class IncSyncQuestionToEs {
     /**
      * 每分钟执行一次
      */
-    @Scheduled(fixedRate = 60 * 1000)
+    @Scheduled(fixedRate = 240 * 1000)
     public void run() {
         // 查询近 5 分钟内的数据
         long FIVE_MINUTES = 5 * 60 * 1000L;

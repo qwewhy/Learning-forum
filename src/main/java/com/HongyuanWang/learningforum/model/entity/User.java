@@ -104,6 +104,31 @@ public class User implements Serializable {
      */
     private String stripeCustomerId;
 
+    /**
+     * 手机号
+     */
+    private String phoneNumber;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 年级
+     */
+    private String grade;
+
+    /**
+     * 工作经验
+     */
+    private String workExperience;
+
+    /**
+     * 擅长方向
+     */
+    private String expertiseDirection;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }
