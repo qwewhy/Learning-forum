@@ -34,7 +34,6 @@ public interface UserService extends IService<User> {
      *
      * @param userAccount  用户账户
      * @param userPassword 用户密码
-     * @param request
      * @return 脱敏后的用户信息
      */
     LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
@@ -43,7 +42,6 @@ public interface UserService extends IService<User> {
      * 用户登录（微信开放平台）
      *
      * @param wxOAuth2UserInfo 从微信获取的用户信息
-     * @param request
      * @return 脱敏后的用户信息
      */
     LoginUserVO userLoginByMpOpen(WxOAuth2UserInfo wxOAuth2UserInfo, HttpServletRequest request);
@@ -51,24 +49,21 @@ public interface UserService extends IService<User> {
     /**
      * 获取当前登录用户
      *
-     * @param request
-     * @return
+     * @return User
      */
     User getLoginUser(HttpServletRequest request);
 
     /**
      * 获取当前登录用户（允许未登录）
      *
-     * @param request
-     * @return
+     * @return User or null
      */
     User getLoginUserPermitNull(HttpServletRequest request);
 
     /**
      * 是否为管理员
      *
-     * @param request
-     * @return
+     * @return boolean
      */
     boolean isAdmin(HttpServletRequest request);
 
@@ -83,8 +78,7 @@ public interface UserService extends IService<User> {
     /**
      * 用户注销
      *
-     * @param request
-     * @return
+     * @return boolean
      */
     boolean userLogout(HttpServletRequest request);
 
@@ -137,4 +131,45 @@ public interface UserService extends IService<User> {
      * @return 用户实体，如果找不到则返回 null
      */
     User getUserByStripeCustomerId(String stripeCustomerId);
+
+    /**
+     * 邮箱注册
+     */
+    long userRegisterByEmail(String email, String userAccount, String userPassword);
+
+    /**
+     * 邮箱或用户名登录
+     */
+    LoginUserVO userLoginByEmailOrAccount(String account, String password, HttpServletRequest request);
+
+    /**
+     * 查找或创建Google用户
+     */
+    User findOrCreateGoogleUser(String googleId, String email, boolean emailVerified,
+                                String name, String pictureUrl);
+
+    /**
+     * 重新发送验证邮件
+     */
+    boolean resendVerificationEmail(String email);
+
+    /**
+     * 发送密码重置邮件
+     */
+    boolean sendPasswordResetEmail(String email);
+
+    /**
+     * 重置密码
+     */
+    boolean resetPassword(String token, String newPassword);
+
+    /**
+     * 检查邮箱是否存在
+     */
+    boolean checkEmailExists(String email);
+
+    /**
+     * 检查用户名是否存在
+     */
+    boolean checkUsernameExists(String username);
 }

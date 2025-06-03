@@ -1,7 +1,5 @@
 package com.HongyuanWang.learningforum.controller;
 
-import cn.dev33.satoken.annotation.SaCheckRole;
-import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.json.JSONUtil;
 import com.HongyuanWang.learningforum.manager.CounterManager;
 import com.HongyuanWang.learningforum.model.dto.question.*;
@@ -14,9 +12,9 @@ import com.HongyuanWang.learningforum.common.ResultUtils;
 import com.HongyuanWang.learningforum.constant.UserConstant;
 import com.HongyuanWang.learningforum.exception.BusinessException;
 import com.HongyuanWang.learningforum.exception.ThrowUtils;
-import com.HongyuanWang.learningforum.service.QuestionBankQuestionService;
 import com.HongyuanWang.learningforum.model.entity.Question;
 import com.HongyuanWang.learningforum.model.entity.User;
+import com.HongyuanWang.learningforum.model.enums.UserRoleEnum;
 import com.HongyuanWang.learningforum.model.vo.QuestionVO;
 import com.HongyuanWang.learningforum.service.QuestionService;
 import com.HongyuanWang.learningforum.service.UserService;
@@ -45,9 +43,6 @@ public class QuestionController {
 
     @Resource
     private UserService userService;
-
-    @Resource
-    private QuestionBankQuestionService questionBankQuestionService;
 
     @Resource
     private CounterManager counterManager;
@@ -104,7 +99,7 @@ public class QuestionController {
         Question oldQuestion = questionService.getById(id);
         ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可删除
-        if (!oldQuestion.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
+        if (!oldQuestion.getUserId().equals(user.getId()) && !userService.isAdmin(user)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         // 操作数据库
@@ -121,7 +116,7 @@ public class QuestionController {
      */
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> updateQuestion(@RequestBody QuestionUpdateRequest questionUpdateRequest) {
+    public BaseResponse<Boolean> updateQuestion(@RequestBody QuestionUpdateRequest questionUpdateRequest, HttpServletRequest request) {
         if (questionUpdateRequest == null || questionUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -149,7 +144,7 @@ public class QuestionController {
      *
      * @param loginUserId
      */
-    private void crawlerDetect(long loginUserId) {
+    private void crawlerDetect(long loginUserId, HttpServletRequest request) {
         // 调用多少次时告警
         final int WARN_COUNT = 10;
         // 超过多少次封号
@@ -161,11 +156,12 @@ public class QuestionController {
         // 是否封号
         if (count > BAN_COUNT) {
             // 踢下线
-            StpUtil.kickout(loginUserId);
-            // 封号
+            if (request != null && request.getSession(false) != null) {
+                request.getSession(false).removeAttribute(UserConstant.USER_LOGIN_STATE);
+            }
             User updateUser = new User();
             updateUser.setId(loginUserId);
-            updateUser.setUserRole("ban");
+            updateUser.setUserRole(UserRoleEnum.BAN.getValue());
             userService.updateById(updateUser);
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "访问太频繁，已被封号");
         }
@@ -190,7 +186,7 @@ public class QuestionController {
         User loginUser = userService.getLoginUserPermitNull(request);
         if (loginUser != null) {
             // 只有登录用户才做爬虫检测
-            crawlerDetect(loginUser.getId());
+            crawlerDetect(loginUser.getId(), request);
         }
 
         // 查询数据库
@@ -210,7 +206,7 @@ public class QuestionController {
      */
     @PostMapping("/list/page")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<Question>> listQuestionByPage(@RequestBody QuestionQueryRequest questionQueryRequest) {
+    public BaseResponse<Page<Question>> listQuestionByPage(@RequestBody QuestionQueryRequest questionQueryRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(questionQueryRequest == null, ErrorCode.PARAMS_ERROR);
         Page<Question> questionPage = questionService.listQuestionByPage(questionQueryRequest);
         return ResultUtils.success(questionPage);
@@ -311,7 +307,7 @@ public class QuestionController {
 
     @PostMapping("/delete/batch")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> batchDeleteQuestion(@RequestBody QuestionBatchDeleteRequest questionBatchDeleteRequest) {
+    public BaseResponse<Boolean> batchDeleteQuestion(@RequestBody QuestionBatchDeleteRequest questionBatchDeleteRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(questionBatchDeleteRequest == null, ErrorCode.PARAMS_ERROR);
         questionService.batchDeleteQuestions(questionBatchDeleteRequest.getQuestionIdList());
         return ResultUtils.success(true);

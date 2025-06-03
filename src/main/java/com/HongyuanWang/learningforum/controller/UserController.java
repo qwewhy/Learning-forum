@@ -1,6 +1,5 @@
 package com.HongyuanWang.learningforum.controller;
 
-import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.HongyuanWang.learningforum.annotation.AuthCheck;
 import com.HongyuanWang.learningforum.common.BaseResponse;
@@ -88,7 +87,7 @@ public class UserController {
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户、密码和确认密码均不能为空");
         }
         long result = userService.userRegister(userAccount, userPassword, checkPassword);
         return ResultUtils.success(result);
@@ -131,7 +130,8 @@ public class UserController {
             if (StringUtils.isAnyBlank(unionId, mpOpenId)) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
             }
-            return ResultUtils.success(userService.userLoginByMpOpen(userInfo, request));
+            LoginUserVO loginUserVO = userService.userLoginByMpOpen(userInfo, request);
+            return ResultUtils.success(loginUserVO);
         } catch (Exception e) {
             log.error("userLoginByWxOpen error", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
@@ -147,10 +147,10 @@ public class UserController {
     @PostMapping("/logout")
     public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
         if (request == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求对象不能为空");
         }
-        boolean result = userService.userLogout(request);
-        return ResultUtils.success(result);
+        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+        return ResultUtils.success(true);
     }
 
     /**
@@ -161,6 +161,9 @@ public class UserController {
      */
     @GetMapping("/get/login")
     public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
+        if (request == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求对象不能为空");
+        }
         User user = userService.getLoginUser(request);
         return ResultUtils.success(userService.getLoginUserVO(user));
     }
@@ -210,8 +213,6 @@ public class UserController {
         return ResultUtils.success(b);
     }
 
-    
-
     /**
      * 更新用户
      *
@@ -234,7 +235,7 @@ public class UserController {
     }
 
     /**
-     * 根据 id 获取用户（仅管理员）
+     * 根据 id 获取用户
      *
      * @param id
      * @param request
@@ -333,92 +334,109 @@ public class UserController {
     }
 
     /**
-     * 编辑用户信息(支持用户和管理员)
+     * 编辑（用户）
      *
-     * @param userEditRequest 编辑请求(包含需要更新的字段)
-     * @param request HTTP 请求
-     * @return 是否成功
+     * @param userEditRequest
+     * @param request
+     * @return
      */
     @PostMapping("/edit")
     public BaseResponse<Boolean> editUser(@RequestBody UserEditRequest userEditRequest, HttpServletRequest request) {
         if (userEditRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
-        // 构建更新对象
-        User user = new User();
-        BeanUtils.copyProperties(userEditRequest, user);
-        // 如果是用户编辑自己，强制设置 ID 为当前用户 ID(防止越权修改)
-        user.setId(loginUser.getId());
-        boolean result = userService.updateById(user);
+        
+        // Fetch the user entity to update
+        User userToUpdate = userService.getById(loginUser.getId());
+        if (userToUpdate == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "登录用户不存在");
+        }
+
+        // Copy editable properties from DTO to entity
+        BeanUtils.copyProperties(userEditRequest, userToUpdate);
+        // Ensure ID is not overwritten if BeanUtils.copyProperties attempts to copy a null ID from DTO
+        userToUpdate.setId(loginUser.getId()); 
+
+        // userRole cannot be changed via this DTO/endpoint by a regular user
+        // If admin functionality for changing role is needed, it should be a separate, secured endpoint or UserEditRequest should include role and be admin-only.
+
+        boolean result = userService.updateById(userToUpdate);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
 
+    /**
+     * 用户签到
+     * @param request
+     * @return
+     */
     @PostMapping("/add/sign_in")
     public BaseResponse<Boolean> addUserSignIn(HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
         boolean result = userService.addUserSignIn(loginUser.getId());
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
+
+    /**
+     * 获取用户某年签到记录
+     * @param request
+     * @return
+     */
+    @GetMapping("/get/sign_in")
+    public BaseResponse<List<Integer>> getUserSignInRecord(Integer year, HttpServletRequest request) {
+        if(year == null) {
+            year = LocalDate.now().getYear();
+        }
+        User loginUser = userService.getLoginUser(request);
+        List<Integer> result = userService.getUserSignInRecord(loginUser.getId(), year);
         return ResultUtils.success(result);
     }
 
-    @GetMapping("/get/sign_in")
-    public BaseResponse<List<Integer>> getUserSignInRecord(Integer year, HttpServletRequest request) {
-     //必须用户登录才能获取
-        User loginUser = userService.getLoginUser(request);
-        List<Integer> userSignInRecord = userService.getUserSignInRecord(loginUser.getId(), year);
-        return ResultUtils.success(userSignInRecord);
-    }
-
-    // region 订阅相关
-
     /**
-     * 创建Stripe订阅结账会话
-     * 用户选择一个价格ID对应的计划进行订阅
-     *
-     * @param checkoutRequest 包含 priceId 和前端的回调 URL
-     * @param request
-     * @return 包含Stripe Checkout Session URL的响应
+     * 创建Stripe订阅的Checkout Session
+     * @param checkoutRequest priceId from frontend
+     * @param request to get logged-in user
+     * @return session id for Stripe Checkout
      */
     @PostMapping("/subscription/checkout")
     public BaseResponse<String> createSubscriptionCheckoutSession(@RequestBody SubscriptionCheckoutRequest checkoutRequest, HttpServletRequest request) {
-        log.info("收到订阅结账请求，参数：{}", checkoutRequest);
-        ThrowUtils.throwIf(checkoutRequest == null, ErrorCode.PARAMS_ERROR, "请求参数不能为空");
-        String priceId = checkoutRequest.getPriceId();
-        log.info("解析得到的priceId：{}", priceId);
-        // String successUrl = checkoutRequest.getSuccessUrl(); // Removed
-        // String cancelUrl = checkoutRequest.getCancelUrl(); // Removed
-
-        ThrowUtils.throwIf(StringUtils.isBlank(priceId), ErrorCode.PARAMS_ERROR, "priceId不能为空");
-
+        if (checkoutRequest == null || StringUtils.isBlank(checkoutRequest.getPriceId())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "Price ID cannot be empty.");
+        }
         User loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        String priceId = checkoutRequest.getPriceId();
         
-        // 验证用户是否具备订阅条件（主要是邮箱验证）
-        boolean isValidForSubscription = subscriptionService.validateUserForSubscription(loginUser);
-        ThrowUtils.throwIf(!isValidForSubscription, ErrorCode.PARAMS_ERROR, "请先完善您的个人信息（特别是邮箱地址）后再进行订阅");
-
-        com.stripe.model.checkout.Session stripeSession = subscriptionService.createCheckoutSession(loginUser, priceId);
-        return ResultUtils.success(stripeSession.getUrl());
+        try {
+            com.stripe.model.checkout.Session stripeSession = subscriptionService.createCheckoutSession(loginUser, priceId);
+            return ResultUtils.success(stripeSession.getUrl());
+        } catch (Exception e) {
+            log.error("Error creating Stripe Checkout session for user {}: {}", loginUser.getId(), e.getMessage());
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "Failed to create subscription session.");
+        }
     }
 
     /**
-     * 创建Stripe客户订阅管理门户会话
-     * 用户通过此会话管理自己的订阅
-     *
-     * @param request
-     * @return 包含Stripe Customer Portal Session URL的响应
+     * 创建Stripe客户门户的Session
+     * @param request to get logged-in user
+     * @return url for Stripe Customer Portal
      */
     @PostMapping("/subscription/portal")
-    public BaseResponse<String> createCustomerPortalSession(HttpServletRequest request) { // Removed @RequestBody CreatePortalSessionRequest portalRequest
-        // ThrowUtils.throwIf(portalRequest == null, ErrorCode.PARAMS_ERROR, "请求参数不能为空"); // Removed
-        // String returnUrl = portalRequest.getReturnUrl(); // Removed
-        // ThrowUtils.throwIf(StringUtils.isBlank(returnUrl), ErrorCode.PARAMS_ERROR, "returnUrl不能为空"); // Removed
-        
-        User loginUser = userService.getLoginUser(request);
-        com.stripe.model.billingportal.Session portalSession = subscriptionService.createCustomerPortalSession(loginUser);
-        return ResultUtils.success(portalSession.getUrl());
+    public BaseResponse<String> createCustomerPortalSession(HttpServletRequest request) {
+         User loginUser = userService.getLoginUser(request);
+         if (loginUser == null) {
+             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+         }
+         try {
+            com.stripe.model.billingportal.Session portalSession = subscriptionService.createCustomerPortalSession(loginUser);
+            return ResultUtils.success(portalSession.getUrl());
+         } catch (Exception e) {
+            log.error("Error creating Stripe Customer Portal session for user {}: {}", loginUser.getId(), e.getMessage());
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "Failed to create customer portal session.");
+         }
     }
-
-    // endregion
 }

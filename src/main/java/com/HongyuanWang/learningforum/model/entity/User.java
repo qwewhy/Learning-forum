@@ -129,6 +129,26 @@ public class User implements Serializable {
      */
     private String expertiseDirection;
 
+    /**
+     * 邮箱是否已验证
+     */
+    private Boolean activated;
+
+    /**
+     * Google OAuth ID
+     */
+    private String googleId;
+
+    /**
+     * 邮箱验证时间
+     */
+    private Date emailVerifiedAt;
+
+    /**
+     * 认证类型：password/google
+     */
+    private String authType;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }
